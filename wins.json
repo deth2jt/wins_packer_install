@@ -29,7 +29,7 @@
           "winrm_insecure": true,
           "winrm_timeout": "4h",
           "floppy_files": [
-            "{{template_dir}}/bootstrap/2016/",
+            "{{template_dir}}/bootstrap/",
             "{{template_dir}}/scripts/vmtools.ps1",
             "{{template_dir}}/scripts/winrm.ps1"
           ],
