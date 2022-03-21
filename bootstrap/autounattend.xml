@@ -104,7 +104,7 @@
         <ProtectYourPC>1</ProtectYourPC>
       </OOBE>
       <TimeZone>Eastern Standard Time</TimeZone>
-      <ComputerName>vagrant-wins</ComputerName>
+      <ComputerName>nein</ComputerName>
       <AutoLogon>
         <Password>
           <Value>P@cker!</Value>
