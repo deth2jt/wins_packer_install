@@ -2,13 +2,13 @@
     "variables": {
       "boot_wait": "6s",
       "disk_size": "40960",
-      "iso_checksum": "e3779d4b1574bf711b063fe457b3ba63",
-      "iso_url": "/home/userone/Downloads/SW_DVD9_Win_Server_STD_CORE_2016_64Bit_English_-4_DC_STD_MLF_X21-70526.ISO",
+      "iso_checksum": "823c3cb59ff0fd43272f12bb2e3a089d",
+      "iso_url": "/home/userone/Downloads/Win10_21H2_English_x64.iso",
       "memsize": "8192",
       "numvcpus": "8",
-      "vm_name": "Win10_1809",
+      "vm_name": "Win10",
       "winrm_password" : "P@cker!",
-      "winrm_username" : "Administrator"                                           
+      "winrm_username" : "vagrant"                                           
     },
     "builders": [
         {
@@ -20,23 +20,27 @@
           "disk_type_id": "0",
           "headless": false,
           "http_directory": "http",
+          
           "iso_checksum": "{{user `iso_checksum`}}",
           "iso_url": "{{user `iso_url`}}",
+
+          
+          
           "communicator":"winrm",
           "winrm_username": "{{user `winrm_username`}}",
           "winrm_password": "{{user `winrm_password`}}",
           "winrm_use_ssl": true,
           "winrm_insecure": true,
-          "winrm_timeout": "4h",
+          "winrm_timeout": "31m",
           "floppy_files": [
             "{{template_dir}}/bootstrap/",
-            "{{template_dir}}/scripts/vmtools.ps1",
             "{{template_dir}}/scripts/winrm.ps1"
           ],
           "shutdown_command": "shutdown /s /t 5 /f /d p:4:1 /c \"Packer Shutdown\"",
           "shutdown_timeout": "30m",
           "skip_compaction": false,
           "vmx_data": {
+            "ethernet0.connectionType": "nat",
             "memsize": "{{user `memsize`}}",
             "numvcpus": "{{user `numvcpus`}}",
             "virtualHW.version": "12",
@@ -45,9 +49,13 @@
         }
     ],
     "provisioners": [
-        {
+         {
             "type": "powershell",
             "script": "{{template_dir}}/scripts/configure-host.ps1"
+          },
+          {
+            "type": "powershell",
+            "script": "{{template_dir}}/scripts/vmtools.ps1"
           },
           {
             "type": "powershell",

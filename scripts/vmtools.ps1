@@ -1,80 +1,98 @@
-<#
-VMTools will not install correctly if rollback is disabled, see: https://kb.vmware.com/s/article/1032916
-This script will look at the current configuration and update if needed.
-At completion it reverts to discovered settings.  This entire script is PSv4 so that it can run under 2012R2 as needed.
-#>
-
-$currentRollbackState = (Get-ItemProperty -Path HKLM:\Software\Policies\Microsoft\Windows\Installer -ErrorAction SilentlyContinue).DisableRollback
-if (($null -ne $currentRollbackState) -and ($currentRollbackState -ne 0)) {
-  Write-Output "DisableRollback has been enabled, temporarily reverting to allow VMTools to complete ..."
-  Set-ItemProperty -Path HKLM:\Software\Policies\Microsoft\Windows\Installer -Name DisableRollback -Value 0
-  $revertRollbackState = $true
+Function Get-VMWareToolsVersion {
+    
+   
+ 
+    $vmwareTools = "https://packages.vmware.com/tools/esx/latest/windows/x64/index.html"
+    $pattern = "[0-9]+\.[0-9]+\.[0-9]+\-[0-9]+\-x86_64"
+ 
+    #get the raw page content
+    $pageContent=(wget -UseBasicParsing -Uri $vmwareTools).content
+ 
+    #change one big string into many strings, then find only the line with the version number
+    $interestingLine = ($pageContent.split("`n") | Select-string -Pattern $pattern).tostring().trim()
+ 
+    #remove the whitespace and split on the assignment operator, then split on the double quote and select the correct item
+    $filename = (($interestingLine.Replace(" ","").Split("=") | Select-string -Pattern $pattern).ToString().Trim().Split("`""))[1]
+ 
+    #file name is in the format "VMware-tools-10.2.1-8267844-x86_64.exe"
+    #convert to a .NET version class, that can be used to compare against other version objects
+    $version = [version]$filename.Replace("VMware-tools-","").Replace("-x86_64.exe","").Replace("-",".")
+ 
+    #return the version object
+    Write-Output $version
 }
-
-# The actual Install
-Write-Output "Installing VMTools ..."
-Start-Process -Filepath e:\setup64.exe -ArgumentList '/S /v "/qb REBOOT=ReallySuppress"' -NoNewWindow -Wait
-
-<#
-Occasionally services will not compeltely install for various reasons that the internet has not yet revealed to me.
-Simply manually install them as needed using PowerShell
-#>
-
-# Define known VMTool services
-$vmServices = @(
-  [Hashtable]@{ 
-    Name = "VGAuthService" 
-    DisplayName = "VMware Alias Manager and Ticket Service"
-    Description = "Alias Manager and Ticket Service"
-    BinaryPathName = '"C:\Program Files\VMware\VMware Tools\VMware VGAuth\VGAuthService.exe"'
-    StartupType = "Automatic"
-  }
-  [Hashtable]@{ 
-    Name = "VMwareCAFCommAmqpListener" 
-    DisplayName = "VMware CAF AMQP Communication Service"
-    Description = "VMware Common Agent AMQP Communication Service"
-    BinaryPathName = '"C:\Program Files\VMware\VMware Tools\VMware CAF\pme\bin\CommAmqpListener.exe"'
-    StartupType = "Manual"
-  }
-  [Hashtable]@{ 
-    Name = "VMwareCAFManagementAgentHost"
-    DisplayName = "VMware CAF Management Agent Service"
-    Description = "VMware Common Agent Management Agent Service"
-    BinaryPathName = '"C:\Program Files\VMware\VMware Tools\VMware CAF\pme\bin\ManagementAgentHost.exe"'
-    StartupType = "Manual"
-  }
-  [Hashtable]@{ 
-    Name = "vmvss"
-    DisplayName = "VMware Snapshot Provider"
-    Description = "VMware Snapshot Provider"
-    BinaryPathName = 'C:\Windows\system32\dllhost.exe /Processid:{8EDC99B4-1313-4F68-AECF-A4C45F322ECD}'
-    DependsOn = "rpcss"
-    StartupType = "Manual"
-  }
-  [Hashtable]@{ 
-    Name = "VMTools"
-    DisplayName = "VMware Tools"
-    Description = "Provides support for synchronizing objects between the host and guest operating systems."
-    BinaryPathName = '"C:\Program Files\VMware\VMware Tools\vmtoolsd.exe"'
-    StartupType = "Automatic"
-  }
-)
-
-# Check each service and recreate if missing
-ForEach ($service in $vmServices) {
-  Write-Output "Checking Service: $($service.DisplayName) ..."
-  if (!(get-service $service.Name -ErrorAction SilentlyContinue)) {
-    Write-Output "Service not found. Creating..."
-    New-Service @service
-  }
+ 
+Function Get-VMWareToolsUri {
+    
+ 
+    $vmwareTools = "https://packages.vmware.com/tools/esx/latest/windows/x64/index.html"
+    $pattern = "[0-9]+\.[0-9]+\.[0-9]+\-[0-9]+\-x86_64"
+ 
+    #get the raw page content
+    $pageContent=(wget -UseBasicParsing -Uri $vmwareTools).content
+ 
+    #change one big string into many strings, then find only the line with the version number
+    $interestingLine = ($pageContent.split("`n") | Select-string -Pattern $pattern).tostring().trim()
+ 
+    #remove the whitespace and split on the assignment operator, then split on the double quote and select the correct item
+    $filename = (($interestingLine.Replace(" ","").Split("=") | Select-string -Pattern $pattern).ToString().Trim().Split("`""))[1]
+ 
+    $url = "https://packages.vmware.com/tools/esx/latest/windows/x64/$($filename)"
+    Write-Output $url
 }
+ 
+# PowerShell Wrapper for MDT, Standalone and Chocolatey Installation - (C)2015 xenappblog.com 
+# Example 1: Start-Process "XenDesktopServerSetup.exe" -ArgumentList $unattendedArgs -Wait -Passthru
+# Example 2 Powershell: Start-Process powershell.exe -ExecutionPolicy bypass -file $Destination
+# Example 3 EXE (Always use ' '):
+# $UnattendedArgs='/qn'
+# (Start-Process "$PackageName.$InstallerType" $UnattendedArgs -Wait -Passthru).ExitCode
+# Example 4 MSI (Always use " "):
+# $UnattendedArgs = "/i $PackageName.$InstallerType ALLUSERS=1 /qn /liewa $LogApp"
+# (Start-Process msiexec.exe -ArgumentList $UnattendedArgs -Wait -Passthru).ExitCode
+ 
+Clear-Host
+Write-Verbose "Setting Arguments" -Verbose
+$StartDTM = (Get-Date)
+ 
+$Vendor = "VMware"
+$Product = "Tools"
+$PackageName = "setup64"
+$Version = "$(Get-VMWareToolsVersion)"
+$InstallerType = "exe"
+$Source = "$PackageName" + "." + "$InstallerType"
+$LogPS = "${env:SystemRoot}" + "\Temp\$Vendor $Product $Version PS Wrapper.log"
+$LogApp = "${env:SystemRoot}" + "\Temp\$PackageName.log"
+$Destination = "${env:ChocoRepository}" + "\$Vendor\$Product\$Version\$packageName.$installerType"
+$UnattendedArgs = '/S /v /qn REBOOT=ReallySuppress'
+$URL = "$(Get-VMWareToolsUri)"
+$ProgressPreference = 'SilentlyContinue'
+$ErrorActionPreference = "Stop"
 
-# Revert the regkey setting if it was changed
-if ($revertRollbackState) {
-  Write-Output "Re-applying original Rollback Settings ..."
-  Set-ItemProperty -Path HKLM:\Software\Policies\Microsoft\Windows\Installer -Name DisableRollback -Value $currentRollbackState
+Start-Transcript $LogPS
+ 
+if( -Not (Test-Path -Path $Version ) )
+{
+    New-Item -ItemType directory -Path $Version
 }
-
-#trim this to save 3 seconds, but I leave this in because VMTools is the devil and sometimes I need to screen cap an error.
-Write-Output "Complete!"
-Start-Sleep -Seconds 3 
+ 
+CD $Version
+ 
+Write-Verbose "Downloading $Vendor $Product $Version" -Verbose
+If (!(Test-Path -Path $Source)) {
+    Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $Source
+         }
+        Else {
+            Write-Verbose "File exists. Skipping Download." -Verbose
+         }
+ 
+Write-Verbose "Starting Installation of $Vendor $Product $Version" -Verbose
+(Start-Process "$PackageName.$InstallerType" $UnattendedArgs -Wait -Passthru).ExitCode
+ 
+Write-Verbose "Customization" -Verbose
+ 
+Write-Verbose "Stop logging" -Verbose
+$EndDTM = (Get-Date)
+Write-Verbose "Elapsed Time: $(($EndDTM-$StartDTM).TotalSeconds) Seconds" -Verbose
+Write-Verbose "Elapsed Time: $(($EndDTM-$StartDTM).TotalMinutes) Minutes" -Verbose
+Stop-Transcript

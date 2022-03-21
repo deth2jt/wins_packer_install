@@ -5,8 +5,10 @@ try {
   Remove-Item "C:\Windows\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
 } catch { }
 
+<# wins 2016
 Write-Host "Optimizing Drive"
 Optimize-Volume -DriveLetter C
+#>
 
 Write-Host "Wiping empty space on disk..."
 $FilePath="c:\zero.tmp"
