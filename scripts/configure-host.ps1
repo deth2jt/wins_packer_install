@@ -47,6 +47,13 @@ Install-Module -Name CertificateDsc -Force -Verbose # certificate installation
 Install-Module -Name NetworkingDsc -Force -Verbose # allows setting IP/network settings
 Install-Module -Name ComputerManagementDsc -Force -Verbose # Computer renaming, ProductKey Installation
 
+#install bluetooth driver 
+$blurl= "https://ftp.hp.com/pub/softpaq/sp75001-75500/sp75330.exe"
+Write-Verbose "Downloading driver" -Verbose
+Invoke-WebRequest -UseBasicParsing -Uri $blurl -OutFile sp75330.exe
+Write-Verbose "Starting Installation of blueooth driver" -Verbose
+Start-Process 'sp75330.exe' '/S /v /qn REBOOT=ReallySuppress' -Wait -Passthru
+
 #windows update
 #takes too long
 #[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
