@@ -42,7 +42,7 @@
             "ethernet0.connectionType": "nat",
             "memsize": "{{user `memsize`}}",
             "numvcpus": "{{user `numvcpus`}}",
-            "virtualHW.version": "12",
+            "virtualHW.version": "16",
             "scsi0.virtualDev": "lsisas1068"
           }
         }
