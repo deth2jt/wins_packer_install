@@ -3,13 +3,7 @@
   <settings pass="windowsPE">
     <!-- look for drivers on floppy -->
     <!-- https://github.com/Justin-DynamicD/packer-windows-vsphere -->
-    <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-PnpCustomizationsWinPE" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
-      <DriverPaths>
-        <PathAndCredentials wcm:keyValue="1" wcm:action="add">
-          <Path>E:\Program Files\VMware\VMware Tools\Drivers\pvscsi\Win8\amd64</Path>
-        </PathAndCredentials>
-      </DriverPaths>
-    </component>
+    
     <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-International-Core-WinPE" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
       <SetupUILanguage>
         <UILanguage>en-US</UILanguage>
@@ -64,8 +58,8 @@
         <OSImage>
           <InstallFrom>
             <MetaData wcm:action="add">
-              <Key>/image/index</Key>
-              <Value>2</Value>
+              <Key>/image/name</Key>
+              <Value>Windows 10 Pro</Value>
             </MetaData>
           </InstallFrom>
           <InstallTo>
@@ -75,12 +69,12 @@
         </OSImage>
       </ImageInstall>
       <UserData>
-        <ProductKey>
-          <WillShowUI>OnError</WillShowUI>
-        </ProductKey>
+          <ProductKey>
+            <Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
+          </ProductKey>
         <AcceptEula>true</AcceptEula>
         <FullName>IT Department</FullName>
-        <Organization>Contoso</Organization>
+        <Organization>Foo-Bar</Organization>
       </UserData>
     </component>
   </settings>
@@ -109,20 +103,15 @@
         <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
         <ProtectYourPC>1</ProtectYourPC>
       </OOBE>
-      <TimeZone>UTC</TimeZone>
-      <UserAccounts>
-        <AdministratorPassword>
-          <Value>P@cker!</Value>
-          <PlainText>true</PlainText>
-        </AdministratorPassword>
-      </UserAccounts>
+      <TimeZone>Eastern Standard Time</TimeZone>
+      <ComputerName>nein</ComputerName>
       <AutoLogon>
         <Password>
           <Value>P@cker!</Value>
           <PlainText>true</PlainText>
         </Password>
         <Enabled>true</Enabled>
-        <Username>Administrator</Username>
+        <Username>vagrant</Username>
         <LogonCount>1</LogonCount>
       </AutoLogon>
       <FirstLogonCommands>
@@ -131,6 +120,21 @@
           <Order>1</Order>
         </SynchronousCommand>
       </FirstLogonCommands>
+
+      <UserAccounts>
+                <LocalAccounts>
+                    <LocalAccount wcm:action="add">
+                        <Password>
+                            <Value>P@cker!</Value>
+                            <PlainText>true</PlainText>
+                        </Password>
+                        <Description>Vagrant User</Description>
+                        <DisplayName>vagrant</DisplayName>
+                        <Group>Administrators;Power Users</Group>
+                        <Name>vagrant</Name>
+                    </LocalAccount>
+                </LocalAccounts>
+            </UserAccounts>
     </component>
   </settings>
   <settings pass="specialize">
@@ -144,16 +148,6 @@
     <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-OutOfBoxExperience" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
       <DoNotOpenInitialConfigurationTasksAtLogon>true</DoNotOpenInitialConfigurationTasksAtLogon>
     </component>
-    <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-      <RunSynchronous>
-        <RunSynchronousCommand wcm:action="add">
-          <Order>1</Order>
-          <!-- Install VMware Tools from windows.iso -->
-          <Path>powershell -ExecutionPolicy Bypass -File a:\vmtools.ps1</Path>
-          <Description>VMTools Setup</Description>
-          <WillReboot>Always</WillReboot>
-        </RunSynchronousCommand>
-      </RunSynchronous>
-    </component>
+    
   </settings>
 </unattend>
